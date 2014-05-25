@@ -10,7 +10,7 @@ MSPPROG = mspdebug rf2500
 OPT = s
 
 CFLAGS += -mmcu=$(MCU) -O$(OPT)
-CFLAGS += -Werror -Wextra
+CFLAGS += -Wextra
 CFLAGS += -Wall -Wcast-align -Wimplicit
 CFLAGS += -Wmissing-prototypes
 CFLAGS += -Wpointer-arith -Wswitch
@@ -22,14 +22,14 @@ CFLAGS += -funsigned-bitfields
 CFLAGS += -fpack-struct
 
 PROG=main
-OBJS=$(PROG).o printf.o
-SRCS=$(PROG).c printf.c
+OBJS=$(PROG).o printf.o usi_i2c.o
+SRCS=$(PROG).c printf.c usi_i2c.c
 
 
 CLEANFILES=$(PROG).elf $(OBJS) *.o *.lss *.elf
 
 $(PROG).elf: $(OBJS) serial.o
-	$(CC) $(CFLAGS) -o $(PROG).elf $(OBJS) serial.o
+	$(CC) $(CFLAGS) -o $(PROG).elf serial.o $(OBJS)
 	@echo "___ [SIZE] ______________________________________________"
 	$(SIZE) $@
 	@echo "___ [SIZE] ______________________________________________"
