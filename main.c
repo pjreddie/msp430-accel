@@ -26,7 +26,8 @@ int main(void)
      */
     serial_setup(XMIT_PIN, MCLK_FREQ/BAUD_RATE);
 
-    printf("Hello my %d%c%c name is %s\n",1,'s','t',"Joe");
+    printf("Hello my %d%c%c name is %s\r\n",1,'s','t',"Joe");
+    while(1);
 
     return (0);
 }
