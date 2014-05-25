@@ -1,0 +1,16 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+*.lss
+
+*.swp
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex

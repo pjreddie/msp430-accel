@@ -22,13 +22,14 @@ CFLAGS += -funsigned-bitfields
 CFLAGS += -fpack-struct
 
 PROG=main
-OBJS=$(PROG).o
-SRCS=$(PROG).c
+OBJS=$(PROG).o printf.o
+SRCS=$(PROG).c printf.c
 
-CLEANFILES=$(PROG).elf $(OBJS)
 
-$(PROG).elf: $(OBJS)
-	$(CC) $(CFLAGS) -o $(PROG).elf $(OBJS)
+CLEANFILES=$(PROG).elf $(OBJS) *.o *.lss *.elf
+
+$(PROG).elf: $(OBJS) serial.o
+	$(CC) $(CFLAGS) -o $(PROG).elf $(OBJS) serial.o
 	@echo "___ [SIZE] ______________________________________________"
 	$(SIZE) $@
 	@echo "___ [SIZE] ______________________________________________"
@@ -36,8 +37,12 @@ $(PROG).elf: $(OBJS)
 $(OBJS): $(SRCS) 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(SRCS)
 
-prog: $(PROG).elf
+install: $(PROG).elf
 	$(MSPPROG) 'prog $(PROG).elf'
+
+# need latest uniarch patches for the -x arg to work
+serial.o: serial.s
+	$(CC) -c -x assembler-with-cpp -Wa,-al=serial.lss -o serial.o serial.s
 
 clean:
 	rm -f $(CLEANFILES)
