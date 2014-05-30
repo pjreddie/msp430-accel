@@ -62,7 +62,7 @@ void printf(char *format, ...)
                 case 'i':                       // 16 bit Integer
                 case 'u':                       // 16 bit Unsigned
                     i = va_arg(a, int);
-                    if(c == 'i' && i < 0) i = -i, putc('-');
+                    if((c == 'i' || c =='d') && i < 0) i = -i, putc('-');
                     xtoa((unsigned)i, dv + 5);
                     break;
                 case 'l':                       // 32 bit Long
