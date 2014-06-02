@@ -24,7 +24,6 @@
 
 #include <msp430g2452.h>
 #include <stdint.h>
-#include <intrinsics.h>
 #include "usi_i2c.h"
 
 
@@ -149,8 +148,7 @@ __interrupt void USI_TXRX(void)
 void i2c_init(uint16_t usi_clock_divider, uint16_t usi_clock_source)
 {
   //_disable_interrupts();
-  //__bic_SR(GIE);
-  __dint();
+  _BIC_SR(GIE);
   USICTL0 = USIPE6+USIPE7+USIMST+USISWRST;  // Port & USI mode setup
   USICTL1 = USII2C+USIIE;                   // Enable I2C mode & USI interrupt
   USICKCTL = usi_clock_divider + usi_clock_source + USICKPL;
@@ -158,8 +156,7 @@ void i2c_init(uint16_t usi_clock_divider, uint16_t usi_clock_source)
   USICTL0 &= ~USISWRST;                     // Enable USI
   USICTL1 &= ~USIIFG;                       // Clear pending flag
   //_enable_interrupts();
-  //__bis_SR(GIE);
-  __eint();
+  _BIS_SR(GIE);
 }
 
 inline unsigned int i2c_done()

@@ -4,6 +4,8 @@ OBJDUMP	= msp430-objdump
 SIZE	= msp430-size --target=elf32-msp430
 MCU	= msp430g2452
 
+DEBUG=1
+
 MSPPROG = mspdebug rf2500
 
 # Level of Optimization
@@ -22,27 +24,33 @@ CFLAGS += -funsigned-bitfields
 CFLAGS += -fpack-struct
 
 PROG=main
-OBJS=$(PROG).o printf.o usi_i2c.o
-SRCS=$(PROG).c printf.c usi_i2c.c
+OBJS=$(PROG).o usi_i2c.o
+SRCS=$(PROG).c usi_i2c.c
+ifeq ($(DEBUG), 1)
+CFLAGS += -D DEBUG
+OBJS=serial.o $(PROG).o printf.o usi_i2c.o
+SRCS=serial.s $(PROG).c printf.c usi_i2c.c
+endif
 
 
 CLEANFILES=$(PROG).elf $(OBJS) *.o *.lss *.elf
 
-$(PROG).elf: $(OBJS) serial.o
-	$(CC) $(CFLAGS) -o $(PROG).elf serial.o $(OBJS)
+$(PROG).elf: $(OBJS)
+	$(CC) $(CFLAGS) -o $(PROG).elf $(OBJS)
 	@echo "___ [SIZE] ______________________________________________"
 	$(SIZE) $@
 	@echo "___ [SIZE] ______________________________________________"
 
-$(OBJS): $(SRCS) 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(SRCS)
+# need latest uniarch patches for the -x arg to work
+serial.o: serial.s
+	$(CC) -c -x assembler-with-cpp -Wa,-al=serial.lss -o serial.o serial.s
+
+%.o: %.c 
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 install: $(PROG).elf
 	$(MSPPROG) 'prog $(PROG).elf'
 
-# need latest uniarch patches for the -x arg to work
-serial.o: serial.s
-	$(CC) -c -x assembler-with-cpp -Wa,-al=serial.lss -o serial.o serial.s
 
 clean:
 	rm -f $(CLEANFILES)
