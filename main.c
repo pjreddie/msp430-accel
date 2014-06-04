@@ -10,13 +10,13 @@
 #define XMIT_PIN BIT1     /* defaults to PORT1 */
 
 #define SAMPLES 25
+#define SIZE 15
 #define abs(x) ((x)<0? -(x) : (x))
 
 int8_t train[SAMPLES*3];
 int8_t test[SAMPLES*3];
-uint8_t data_ready = 0;
-int state = 0;
-int thresh = 0;
+unsigned int thresh = 0;
+unsigned int state = 0;
 
 
 #pragma vector=PORT1_VECTOR
@@ -25,12 +25,12 @@ __interrupt void Port_1(void)
     if(P1IFG & BIT3){
         P1IE  &= ~BIT3;
         P1IFG &= ~BIT3;
-        __bic_SR_register_on_exit(LPM3_bits);
+        __bic_SR_register_on_exit(LPM4_bits);
     }
     if(P1IFG & BIT4){
         P1IES ^= BIT4;
         P1IFG &= ~BIT4;
-        __bic_SR_register_on_exit(LPM3_bits);
+        __bic_SR_register_on_exit(LPM4_bits);
     }
 }
 
@@ -61,11 +61,26 @@ void sample_xyz()
     P1OUT |=  BIT0;
     for(i = 0; i < SAMPLES; ++i){
         read_xyz((uint8_t *)&(buff[i*3]));
-        _BIS_SR(LPM3_bits + GIE);
+        _BIS_SR(LPM4_bits + GIE);
     }
     P1IE &= ~BIT4;
     mma_standby();
     P1OUT &= ~BIT0;
+}
+
+unsigned int best_overlap()
+{
+    int i,j;
+    unsigned int best = 1000;
+    int train_start = 3*((SAMPLES>>1) - (SIZE>>1));
+    for(i = 0; i < SAMPLES-SIZE; ++i){
+        unsigned int curr = 0;
+        for(j = 0; j < SIZE*3; ++j){
+            curr += abs(train[train_start+j] - test[i*3+j]);
+        }
+        if(curr < best) best = curr;
+    }
+    return best;
 }
 
 int main(void)
@@ -81,8 +96,11 @@ int main(void)
     P1DIR |= XMIT_PIN;
     P1DIR |= BIT0;
     P1OUT &= ~BIT0;
-    P1DIR |= BIT5;
-    P1OUT &= ~BIT5;
+    P2DIR |= BIT1;
+    P2OUT &= ~BIT1;
+
+    P2DIR |= BIT0;
+    P2OUT &= ~BIT0;
 
     /**
      * configure serial routines for P1OUT, PIN1 9600 bps
@@ -96,25 +114,33 @@ int main(void)
     setup_interrupts();
 
     while(1){
-        _BIS_SR(LPM3_bits + GIE);
+        _BIS_SR(LPM4_bits + GIE);
         sample_xyz();
+
+        /*
         int i;
+        uint8_t *buff = (uint8_t*)((state == 0)?train:test);
+        for(i = 3; i < SAMPLES*3; ++i){
+            buff[i-3] = buff[i] - buff[i-3];
+        }
+        */
         if(state > 0){
-            int diff = 0;
-            for(i = 0; i < SAMPLES*3; ++i){
-                diff += abs(train[i] - test[i]);
-            }
+            unsigned int diff = best_overlap();
             if(state == 1){
-                thresh = diff + (diff>>2);
+                thresh = diff + (diff>>2) + (diff>>3);
                 printf("Difference: %d, Threshold: %d\r\n", diff, thresh);
             }
             else if(diff < thresh){
-                P1OUT |= BIT5;
+                P2OUT |= BIT1;
                 printf("Unlocked! %d\r\n", diff);
+                setup_timeout(500);
+                LPM0;
             }
             else{
-                P1OUT &= ~BIT5;
+                P2OUT |= BIT0;
                 printf("DENIED: %d\r\n", diff);
+                setup_timeout(500);
+                LPM0;
             }
         }
         if(state < 2) ++state;
@@ -126,23 +152,21 @@ int main(void)
 }
 
 
-/*
-unsigned int curtime = 0;
-unsigned int maxtime = 0;
+unsigned int time = 0;
 #pragma vector=WDT_VECTOR
 __interrupt void watchdog_timer(void)
 {
-    if(++curtime == maxtime){
-        P1OUT &= ~BIT0;
-        _BIS_SR(LPM3_bits + GIE);
+    if(!--time){
+        P2OUT &= ~BIT1;
+        P2OUT &= ~BIT0;
+        WDTCTL = (WDTPW + WDTHOLD);
+        __bic_SR_register_on_exit(LPM0_bits);
     }
 }
 
 void setup_timeout(unsigned int ms)
 {
-    curtime = 0;
-    maxtime = ms>>5;
+    time = ms>>5;
     WDTCTL = WDT_MDLY_32;
     IE1 |= WDTIE;
 }
-*/
