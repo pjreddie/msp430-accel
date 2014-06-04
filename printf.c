@@ -1,7 +1,7 @@
 #include "stdarg.h"
-
-void putc(unsigned);
+#include "printf.h"
 void puts(char *);
+void putc(char);
 
 static const unsigned long dv[] = {
     //  4294967296      // 32 bit unsigned max
@@ -40,7 +40,6 @@ static void puth(unsigned n)
     putc(hex[n & 15]);
 }
 
-void printf(char *format, ...);
 void printf(char *format, ...)
 {
     char c;
