@@ -59,7 +59,7 @@ void mma_init(void)
 {
     i2c_init(USIDIV_1, USISSEL_2);
     mma_standby();
-    write_register(0x0e, 0b10); // 8g mode
+    write_register(0x0e, 0b00); // 8g mode
     write_register(0x2a, 0b00101010); // 8bit mode (F_READ=1)
     write_register(0x2d, 0b1);  // Data ready interrupt
     mma_active();

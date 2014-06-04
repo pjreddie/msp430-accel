@@ -90,6 +90,7 @@ int main(void)
 #ifdef DEBUG
     serial_setup(XMIT_PIN, MCLK_FREQ/BAUD_RATE);
 #endif
+    printf("Starting up gesture recognition...\r\n");
 
     mma_init();
     setup_interrupts();
