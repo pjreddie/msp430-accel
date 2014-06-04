@@ -1,5 +1,8 @@
-#include "stdarg.h"
 #include "printf.h"
+#ifndef DEBUG
+void printf(char *format, ...){}
+#else
+#include "stdarg.h"
 void puts(char *);
 void putc(char);
 
@@ -85,3 +88,4 @@ void printf(char *format, ...)
     }
     va_end(a);
 }
+#endif

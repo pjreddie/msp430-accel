@@ -24,8 +24,8 @@ CFLAGS += -funsigned-bitfields
 CFLAGS += -fpack-struct
 
 PROG=main
-OBJS=$(PROG).o usi_i2c.o msp_iface.o
-SRCS=$(PROG).c usi_i2c.c msp_iface.c
+OBJS=$(PROG).o printf.o usi_i2c.o msp_iface.o
+SRCS=$(PROG).c printf.c usi_i2c.c msp_iface.c
 ifeq ($(DEBUG), 1)
 CFLAGS += -D DEBUG
 OBJS=serial.o $(PROG).o printf.o usi_i2c.o msp_iface.o

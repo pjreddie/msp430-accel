@@ -61,6 +61,7 @@ void mma_init(void)
     mma_standby();
     write_register(0x0e, 0b00); // 2g mode
     write_register(0x2a, 0b00101010); // 8bit mode (F_READ=1)
+    write_register(0x2b, 0b00001000); // 8bit mode (F_READ=1)
     write_register(0x2d, 0b1);  // Data ready interrupt
     mma_active();
 }
