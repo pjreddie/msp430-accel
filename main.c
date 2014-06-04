@@ -105,7 +105,7 @@ int main(void)
                 diff += abs(train[i] - test[i]);
             }
             if(state == 1){
-                thresh = diff + (diff>>3);
+                thresh = diff + (diff>>2);
                 printf("Difference: %d, Threshold: %d\r\n", diff, thresh);
             }
             else if(diff < thresh){
