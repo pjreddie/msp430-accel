@@ -2,9 +2,80 @@
 
 \usepackage[margin=1in]{geometry}
 
+\title{Low-Power Machine Learning}
+\author{Joe Redmon and Calvin Loncaric}
+\date{June 12, 2014}
+
 \begin{document}
 
-Hello
+\maketitle
+
+\section{Introduction}
+
+Low-power computing devices are becoming increasingly relevant. As computing
+becomes more common, it will be more and more important to reduce power costs.
+Low-power devices can be deployed in more areas where a steady supply of
+electricity may be harder to come by. Lowering power requirements can increase
+usability by increasing battery life. Battery-free devices that harvest energy
+from ambient sources (such as radio waves) can be manufactured more cheaply
+than battery-powered devices. As they have no battery, they are also more
+environmentally friendly.
+
+Previous work has established that gesture recognition on low-power devices is
+possible \cite{allsee}. This means that low-power devices can augment or
+replace high-power gesture recognition technologies. However, the set of
+gestures available must be hard-coded in advance and carefully tuned for the
+low-power environment. In this work we seek to remove this restriction by doing
+simple machine learning on the device itself, enabling users to train new
+gestures and removing the need for implementors to devise specialized
+algorithms.
+
+Machine learning has been successfully applied in almost every real-world
+setting: control systems, computer vision, speech recognition, language
+processing, signal processing, information retrieval, and many other domains.
+Given its ubiquity, bringing machine learning to low-power devices could have
+other applications as well. Control systems---such as those in thermostats---%
+can learn patterns in their environment to better predict temperature changes
+and adjust in advance. In the context of localization, machine learning could
+enable devices to learn to differentiate various different locations by using
+various sensors (as in SurroundSense \cite{surroundsense}). By pressing a
+button a user could effectively train a new relevant location into the device.
+
+Our work focuses on gesture recognition and has resulted in a small working
+prototype based on the MSP430 line of low-power CPUs. By pressing buttons the
+user can train a gesture into the prototype by performing it only twice.
+
+\section{Background and Related Work}
+
+Machine learning typically takes place in two phases. In the first phase
+(``learning''), training data is used to construct a model. The model captures
+with relatively little data the relationships in the training data and is used
+in the second phase (``deployment'') along with input data to classify inputs
+or predict outputs.
+
+There has been previous work on producing models for low-power environments
+\cite{low-power-models} but this work relies on a powerful external system to
+produce the model in the first place. This makes it inappropriate for our
+domain, as learning cannot be performed on the device itself.
+
+Other groups have attempted to make learning low-power by producing dedicated
+hardware \cite{ml-on-a-chip}. This work, while orders of magnitude more
+power efficient than conventional hardware, still uses several
+orders of magnitude more power than we would like. Their hardware requires
+roughly 47300{$\mu$}W of power to run, while we expect to use under 50{$\mu$}W of
+power. Dedicated hardware could become important if machine learning is
+required in a low-power environment, but we would prefer an approach that runs
+on general-purpose hardware so the device can be used for other things when
+learning is not taking place.
+
+A simpler learning algorithm that is still relatively high-accurracy is
+required in this domain.
+
+\section{Implementation}
+
+\section{Results and Discussion}
+
+\section{Conclusion}
 
 \bibliography{bibliography}
 \bibliographystyle{plain}
