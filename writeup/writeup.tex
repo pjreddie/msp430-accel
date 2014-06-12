@@ -1,6 +1,7 @@
 \documentclass[12pt]{article}
 
 \usepackage[margin=1in]{geometry}
+\usepackage[]{graphicx}
 
 \title{Low-Power Machine Learning}
 \author{Joe Redmon and Calvin Loncaric}
@@ -72,6 +73,34 @@ A simpler learning algorithm that is still relatively high-accurracy is
 required in this domain.
 
 \section{Implementation}
+Our implementation uses a two-phase procedure to learn to recognize gestures. First it learns the ground truth for the gesture and then it estimates the size of the space that should be classified as the gesture. Subsequent gestures are compared to this space to see if they match the trained gesture. The whole training and recognition procedure takes place on low power hardware that is suitable for RF powered devices.
+
+\subsection{Hardware}
+For prototyping our algorithm we used a MSP430 microcontroller on a LaunchPad development board and a MMA8452 accelerometer. The MSP430 consumes 500{$\mu$}W of power during active operation, but only 0.1{$\mu$}W when it is in low power mode. The MMA8452 uses 16{$\mu$}W of power when collecting samples. Sampling and processing both happen in a one off manner and are driven by user input so the system is usually in low power mode.
+
+\subsection{Training}
+When the user presses the input button, the device begins recording movement from the accelerometer. The first time the button is pressed, the sample is saved as the ground truth of the gesture. We sample for 2 seconds at 12.5 Hz, obtaining 25 readings. However, only the middle 15 (1.2 seconds) are used to eliminate noise at the beginning or end of the gesture.
+
+The second time the button is pressed, the user performs the same action during the same time frame. We slide the ground truth gesture over the second buffer and find the window with the smallest difference:
+
+\begin{equation}
+\label{eq:norm}
+\delta = \min_i \|V_{test}[i:i+15] - V_{truth} \|_1
+\end{equation}
+
+Using this $\delta$ we calculate our threshold $T = 1.5*\delta$
+
+\subsection{Testing}
+The full gesture model is specified by the ground truth vector $V_{test}$ and the threshold $T$. When the user presses the button again, we sample from the accelerometer and use equation \ref{eq:norm} to find the smallest overlap $\delta_{test}$. If $\delta_{test} < T$ than we classify the gesture as matching the trained gesture. If not, we reject it.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=.7\linewidth]{graph}
+\end{center}
+\caption{Our learning procedure. We learn the ground truth $V_{truth}$ and the threshold $T$. New examples are classified positive or negative based on their closest subvector.}
+\label{graph}
+\end{figure}
+
 
 \section{Results and Discussion}
 
