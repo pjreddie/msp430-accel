@@ -1,7 +1,9 @@
 \documentclass[12pt]{article}
 
 \usepackage[margin=1in]{geometry}
-\usepackage[]{graphicx}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{subcaption}
 
 \title{Low-Power Machine Learning}
 \author{Joe Redmon and Calvin Loncaric}
@@ -48,6 +50,10 @@ user can train a gesture into the prototype by performing it only twice.
 
 \section{Background and Related Work}
 
+There is some previous work on machine-learning in low-power environments,
+but not much, and none of it achieves our energy usage goals (under 50{$\mu$}W
+of average usage).
+
 Machine learning typically takes place in two phases. In the first phase
 (``learning''), training data is used to construct a model. The model captures
 with relatively little data the relationships in the training data and is used
@@ -63,14 +69,13 @@ Other groups have attempted to make learning low-power by producing dedicated
 hardware \cite{ml-on-a-chip}. This work, while orders of magnitude more
 power efficient than conventional hardware, still uses several
 orders of magnitude more power than we would like. Their hardware requires
-roughly 47300{$\mu$}W of power to run, while we expect to use under 50{$\mu$}W of
-power. Dedicated hardware could become important if machine learning is
-required in a low-power environment, but we would prefer an approach that runs
-on general-purpose hardware so the device can be used for other things when
-learning is not taking place.
+roughly 47300{$\mu$}W of power to run. Dedicated hardware could become
+important, but we would prefer an approach that runs on general-purpose
+hardware so the device can be used for other things when learning is not taking
+place.
 
 A simpler learning algorithm that is still relatively high-accurracy is
-required in this domain.
+required.
 
 \section{Implementation}
 Our implementation uses a two-phase procedure to learn to recognize gestures. First it learns the ground truth for the gesture and then it estimates the size of the space that should be classified as the gesture. Subsequent gestures are compared to this space to see if they match the trained gesture. The whole training and recognition procedure takes place on low power hardware that is suitable for RF powered devices.
@@ -102,9 +107,95 @@ The full gesture model is specified by the ground truth vector $V_{test}$ and th
 \end{figure}
 
 
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=0.3\textwidth]{device-original.jpg}
+  \caption{The prototype. Batteries are included on the back side.}
+  \end{center}
+\end{figure}
+
+Discuss: implementation constraints (no multiplication), our overall algorithm,
+and tricks for low-power mode (interrupt-driven sampling).
+
 \section{Results and Discussion}
 
+\begin{table}[h!]
+\begin{center}
+    \begin{tabular}{cc|cccc}
+    & & \multicolumn{4}{c}{Trained} \\
+    & & stab & swipe & loop & tilt \\
+    \hline
+    \multirow{4}{*}{Performed} & stab & 30 & 0 & 0 & 0  \\
+    & swipe & 0 & 19 & 0 & 0 \\
+    & loop & 0 & 0 & 30 & 0 \\
+    & tilt & 0 & 0 & 0 & 21
+    \end{tabular}
+    \caption{Accuracy data. Columns indicate which gesture was
+    trained into the device, and rows are which gesture was performed. Each
+    cell was tested a total of 30 times. Each gesture was trained only once
+    and then all rows were tested in order. Overall accuracy is 83\% with no
+    false positives.}
+    \label{tbl:data}
+\end{center}
+\end{table}
+
+\begin{figure}[h!]
+\begin{center}
+    \begin{subfigure}[b]{0.2\textwidth}
+            \includegraphics[width=\textwidth]{gesture-stab.png}
+            \caption{Stab}
+            \label{fig:stab}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.2\textwidth}
+            \includegraphics[width=\textwidth]{gesture-swipe.png}
+            \caption{Swipe}
+            \label{fig:swipe}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.2\textwidth}
+            \includegraphics[width=\textwidth]{gesture-loop.png}
+            \caption{Loop}
+            \label{fig:loop}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.2\textwidth}
+            \includegraphics[width=\textwidth]{gesture-tilt.png}
+            \caption{Tilt}
+            \label{fig:tilt}
+    \end{subfigure}
+    \caption{Gestures performed. ``Stab'' is a forward then a backward motion.
+    ``Swipe'' is a left then a right motion. ``Loop'' is a counterclockwise
+    circle. ``Tilt'' is a 45-degree turn around the forward axis, then a return
+    to normal.}
+    \label{fig:gestures}
+\end{center}
+\end{figure}
+
+Table \ref{tbl:data} shows collected accuracy data for our prototype for the
+gestures listed in figure \ref{fig:gestures}. The data was collected by one of
+the authors by training the device on a gesture and then performing each of
+the other gestures thirty times. The table reports the number of positive
+identifications.
+
+The prototype had an overall 83\% accuracy with no false positives. These
+results are not surprising: when training the device it is very easy to perform
+exactly the same gesture twice in a row, so it learns a very strict threshold.
+Subsequent gestures tend to deviate more significantly from the first few,
+leading to a low overall recognition quality. Adjusting the threshold tolerance
+could improve this at the risk of introducing false positives.
+
+Another source of difficulty in recognition is strict orientation dependence.
+Since multiplication is prohibitively expensive we cannot compute a dot product
+of subsequent accelerometer data (to examine just the change in direction). Our
+model requires that the gesture be performed in the exact same orientation
+every time, so slight variations in direction can cause recognition failures.
+(For instance, when performing the swipe gesture, the user must be careful not
+to drift too far forward or backward while swiping.) Orientation dependence is
+a blessing and a curse: it means that ``swipe'' is different from ``stab'' (and
+in general we can differentiate more gestures) but it also makes it more
+difficult to recognize a variation on the same gesture.
+
 \section{Conclusion}
+
+TODO -- sum it up nice and sweet
 
 \bibliography{bibliography}
 \bibliographystyle{plain}
