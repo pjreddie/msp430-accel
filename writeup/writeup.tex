@@ -22,16 +22,16 @@ electricity may be harder to come by. Lowering power requirements can increase
 usability by increasing battery life. Battery-free devices that harvest energy
 from ambient sources (such as radio waves) can be manufactured more cheaply
 than battery-powered devices. As they have no battery, they are also more
-environmentally friendly.
+environmentally friendly and require significantly less maintenance.
 
 Previous work has established that gesture recognition on low-power devices is
 possible \cite{allsee}. This means that low-power devices can augment or
 replace high-power gesture recognition technologies. However, the set of
-gestures available must be hard-coded in advance and carefully tuned for the
+gestures available must be hard-coded in advance and be carefully tuned for the
 low-power environment. In this work we seek to remove this restriction by doing
 simple machine learning on the device itself, enabling users to train new
 gestures and removing the need for implementors to devise specialized
-algorithms.
+algorithms and heuristics.
 
 Machine learning has been successfully applied in almost every real-world
 setting: control systems, computer vision, speech recognition, language
@@ -78,10 +78,13 @@ A simpler learning algorithm that is still relatively high-accurracy is
 required.
 
 \section{Implementation}
+
 Our implementation uses a two-phase procedure to learn to recognize gestures. First it learns the ground truth for the gesture and then it estimates the size of the space that should be classified as the gesture. Subsequent gestures are compared to this space to see if they match the trained gesture. The whole training and recognition procedure takes place on low power hardware that is suitable for RF powered devices.
 
 \subsection{Hardware}
 For prototyping our algorithm we used a MSP430 microcontroller on a LaunchPad development board and a MMA8452 accelerometer. The MSP430 consumes 500{$\mu$}W of power during active operation, but only 0.1{$\mu$}W when it is in low power mode. The MMA8452 uses 16{$\mu$}W of power when collecting samples. Sampling and processing both happen in a one off manner and are driven by user input so the system is usually in low power mode.
+
+These low-power components introduce some difficult constraints. In particular, common operations like multiplication and division are prohibitively expensive. Our approach is intentionally designed to avoid multiplication.
 
 \subsection{Training}
 When the user presses the input button, the device begins recording movement from the accelerometer. The first time the button is pressed, the sample is saved as the ground truth of the gesture. We sample for 2 seconds at 12.5 Hz, obtaining 25 readings. However, only the middle 15 (1.2 seconds) are used to eliminate noise at the beginning or end of the gesture.
@@ -114,9 +117,6 @@ The full gesture model is specified by the ground truth vector $V_{test}$ and th
   \end{center}
 \end{figure}
 
-Discuss: implementation constraints (no multiplication), our overall algorithm,
-and tricks for low-power mode (interrupt-driven sampling).
-
 \section{Results and Discussion}
 
 \begin{table}[h!]
@@ -131,7 +131,9 @@ and tricks for low-power mode (interrupt-driven sampling).
     & tilt & 0 & 0 & 0 & 21
     \end{tabular}
     \caption{Accuracy data. Columns indicate which gesture was
-    trained into the device, and rows are which gesture was performed. Each
+    trained into the device, and rows are which gesture was performed. Cells
+    contain the number of positive recognitions for the ``performed'' gesture
+    when trained on the ``trained'' gesture. Each
     cell was tested a total of 30 times. Each gesture was trained only once
     and then all rows were tested in order. Overall accuracy is 83\% with no
     false positives.}
@@ -169,6 +171,24 @@ and tricks for low-power mode (interrupt-driven sampling).
 \end{center}
 \end{figure}
 
+\begin{table}
+\begin{center}
+    \begin{tabular}{c|c}
+    Task & Energy Usage \\
+    \hline
+    idle & 6.6$\mu$W \\
+    collecting & 10980$\mu$W \\
+    LED light & 13230$\mu$W \\
+    \end{tabular}
+    \caption{Energy usage information for our prototype at 3.3 volts. ``Idle''
+    is when the prototype is doing nothing (not even collecting accelerometer
+    data). ``Collecting'' is when the prototype is sampling data from the
+    accelerometer. ``LED light'' is when the prototype is lighting up an LED to
+    inform the user of a result.}
+    \label{tbl:power}
+\end{center}
+\end{table}
+
 Table \ref{tbl:data} shows collected accuracy data for our prototype for the
 gestures listed in figure \ref{fig:gestures}. The data was collected by one of
 the authors by training the device on a gesture and then performing each of
@@ -193,9 +213,25 @@ a blessing and a curse: it means that ``swipe'' is different from ``stab'' (and
 in general we can differentiate more gestures) but it also makes it more
 difficult to recognize a variation on the same gesture.
 
-\section{Conclusion}
+Our power usage information is shown in table \ref{tbl:power}. While these
+numbers are \emph{significantly} higher than what we predicted based on our
+hardware, we attribute them to poor circuit design and point out that our
+components can certainly be used more effectively. Power usage can also be
+improved by reducing various overheads: while collecting power usage data,
+our prototype still lights up a small LED to indicate that work is taking place
+and still writes data to the serial port for debugging.
 
-TODO -- sum it up nice and sweet
+\section{Conclusion and Acknowledgements}
+We have shown that machine learning on low-power devices is certainly possible,
+albeit limited. Our initial results are promising, with a somewhat high
+recognition accuracy despite a very simple algorithm. Plenty of future work
+remains to devise new algorithms and reduce power usage. We suggest two
+directions for future researchers: looking at ways to reduce the amount of
+data collected and ways to design more efficient circuits.
+
+We would like to thank Bryce Kellogg for his invaluable assistance during this
+project. He helped us get the hardware set up and measure power usage
+information, and without his help we would not have gotten as far as we did.
 
 \bibliography{bibliography}
 \bibliographystyle{plain}
